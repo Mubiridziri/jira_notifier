@@ -1,4 +1,5 @@
 # Jira Notifier
+[![Go](https://github.com/Mubiridziri/jira_notifier/actions/workflows/go.yml/badge.svg)](https://github.com/Mubiridziri/jira_notifier/actions/workflows/go.yml)
 > If you, like me, have cluttered mail from various notifications. This simple solution will allow you to receive notifications about new tasks assigned to you directly in your Telegram.
 
 ## Setup
