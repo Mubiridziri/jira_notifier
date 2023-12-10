@@ -91,12 +91,12 @@ func handleUpdate(bot models.TelegramBot) {
 					user.JiraAuthorized = true
 					models.DB.Save(&user)
 
-					_ = SendTelegramMessage(
+					_ = SendTelegramPlainMessage(
 						bot,
 						fmt.Sprintf("Спасибо, %v! Авторизация прошла успешно, токен сохранен.", user.Name),
 						user.ChatID)
 					HandleUserIssues(bot, true)
-					_ = SendTelegramMessage(
+					_ = SendTelegramPlainMessage(
 						bot,
 						"Успешно актуализирована база данных ранее существующих тикетов.",
 						user.ChatID)
@@ -104,7 +104,7 @@ func handleUpdate(bot models.TelegramBot) {
 				}
 			}
 
-			_ = SendTelegramMessage(
+			_ = SendTelegramPlainMessage(
 				bot,
 				fmt.Sprintf("Привет, %v! Пришли мне персональный токер авторизации Jira.", user.Name),
 				user.ChatID)
@@ -126,13 +126,26 @@ func validTokenCheck(bot models.TelegramBot) error {
 	return nil
 }
 
-func SendTelegramMessage(bot models.TelegramBot, message string, recipient uint) map[string]interface{} {
+func SendTelegramPlainMessage(bot models.TelegramBot, message string, recipient uint) map[string]interface{} {
 	url := getTelegramUrl(bot, TelegramSendMessageMethod)
 
 	body := map[string]interface{}{
 		"chat_id": recipient,
 		"text":    message,
 	}
+
+	jsonMap, err := MakePostJsonRequest(url, body, make(map[string]string))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil
+	}
+
+	return jsonMap
+}
+
+func SendTelegramCustomMessage(bot models.TelegramBot, body map[string]interface{}) map[string]interface{} {
+	url := getTelegramUrl(bot, TelegramSendMessageMethod)
 
 	jsonMap, err := MakePostJsonRequest(url, body, make(map[string]string))
 
