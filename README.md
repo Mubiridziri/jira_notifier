@@ -4,7 +4,7 @@
 
 ## Setup
 
-### Creating .env file with context like this:
+### Creating .env file like this:
 ```.env
 TELEGRAM_TOKEN=BotToken
 DATABASE_NAME=bot.db
