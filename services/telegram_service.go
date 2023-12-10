@@ -90,10 +90,17 @@ func handleUpdate(bot models.TelegramBot) {
 					user.JiraPersonalToken = message
 					user.JiraAuthorized = true
 					models.DB.Save(&user)
+
 					_ = SendTelegramMessage(
 						bot,
 						fmt.Sprintf("Спасибо, %v! Авторизация прошла успешно, токен сохранен.", user.Name),
 						user.ChatID)
+					HandleUserIssues(bot, true)
+					_ = SendTelegramMessage(
+						bot,
+						"Успешно актуализирована база данных ранее существующих тикетов.",
+						user.ChatID)
+					continue
 				}
 			}
 

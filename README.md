@@ -38,4 +38,3 @@ $ go build
 ## Getting with bot
 
 During the first dialogue with the bot, it will ask you to send a personal token. You can take it in your Jira profile settings.
-
