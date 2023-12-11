@@ -2,41 +2,44 @@ package main
 
 import (
 	"fmt"
+	"github.com/TwiN/go-color"
 	"jiraAwesomeBot/config"
 	"jiraAwesomeBot/models"
 	"jiraAwesomeBot/services"
+	"net/http"
 )
 
 func main() {
-	fmt.Println("Starting...")
-	fmt.Println("Load .env file...")
+	fmt.Println(color.Ize(color.Green, "Starting..."))
+	fmt.Println(color.Ize(color.Green, "Load .env file..."))
 	if err := config.LoadConfig(); err != nil {
 		panic(err)
 	}
 
-	fmt.Println("Connect to local database...")
+	fmt.Println(color.Ize(color.Green, "Connect to local database..."))
 	if err := models.ConnectDatabase(); err != nil {
 		panic(err)
 	}
 
-	fmt.Println("Starting Telegram Bot Handler...")
-	bot, err := services.StartBot()
+	fmt.Println(color.Ize(color.Green, "Starting Telegram Bot Handler..."))
+	err := services.StartBot()
 	if err != nil {
-		fmt.Println("Cannot start a bot")
 		panic(err)
 	}
 
-	fmt.Println("Update database...")
-	services.HandleUserIssues(bot, true)
-	fmt.Println("Starting Jira Issue Listener...")
-	go services.StartListener(bot, false)
+	fmt.Println(color.Ize(color.Green, "Update database..."))
+	services.PreloadUpdatesToDatabase()
+	services.HandleUserIssues(true)
+	fmt.Println(color.Ize(color.Green, "Starting Jira Issue Listener..."))
 
-	for {
-		if !config.CFG.Alive {
-			break
-		}
+	//Start goroutines listener
+	go services.StartBotListener()
+	go services.StartJiraListener(false)
+
+	//TODO SECURE API ENDPOINT FOR GLOBAL TELEGRAM MESSAGE FOR ACTIVE USERS
+	//HTTP Server
+	err = http.ListenAndServe(":8080", nil)
+	if err != nil {
+		panic(err)
 	}
-
-	fmt.Println("Shutdown...")
-
 }

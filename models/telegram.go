@@ -15,8 +15,8 @@ type TelegramUpdate struct {
 	Message Message
 }
 
-func NewTelegramBot() TelegramBot {
-	return TelegramBot{
+func NewTelegramBot() *TelegramBot {
+	return &TelegramBot{
 		Token:  helpers.GetEnvStr(config.TelegramToken, ""),
 		Buffer: 1,
 	}
