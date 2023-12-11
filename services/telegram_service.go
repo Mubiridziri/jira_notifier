@@ -14,20 +14,20 @@ const TelegramGetMeMethod = "getMe"
 const TelegramSendMessageMethod = "sendMessage"
 const TelegramGetUpdatesMethod = "getUpdates"
 
-func StartBot() (models.TelegramBot, error) {
-	bot := models.NewTelegramBot()
-	if err := validTokenCheck(bot); err != nil {
-		return models.TelegramBot{}, errors.New("invalid telegramToken")
+var BOT *models.TelegramBot
+
+func StartBot() error {
+	BOT = models.NewTelegramBot()
+	if err := validTokenCheck(); err != nil {
+		return errors.New("invalid telegramToken")
 	}
 
-	go handleUpdate(bot)
-
-	return bot, nil
+	return nil
 }
 
-func getUpdatesChan(bot models.TelegramBot, ch chan models.TelegramUpdate) {
+func getUpdatesChan(ch chan models.TelegramUpdate) {
 	for {
-		url := getTelegramUrl(bot, TelegramGetUpdatesMethod)
+		url := getTelegramUrl(TelegramGetUpdatesMethod)
 		respMap, err := MakeGetJsonRequest(url, make(map[string]string))
 
 		if err != nil {
@@ -35,38 +35,24 @@ func getUpdatesChan(bot models.TelegramBot, ch chan models.TelegramUpdate) {
 		}
 
 		results := respMap["result"].([]interface{})
-
 		for _, result := range results {
 			currentResult := result.(map[string]interface{})
-			message, exists := currentResult["message"]
-			if exists {
-				from := message.(map[string]interface{})["from"].(map[string]interface{})
-				text := message.(map[string]interface{})["text"].(string)
-				messageId := message.(map[string]interface{})["message_id"].(float64)
-				chatId := from["id"].(float64)
+			updateId := currentResult["update_id"].(float64)
 
-				_, err := models.FindMessageById(uint(messageId))
+			if updateIdExists := models.IsExistUpdateId(uint(updateId)); updateIdExists {
+				continue
+			}
+			//Save update_id to database
+			models.DB.Create(&models.Update{UpdateID: uint(updateId)})
 
-				if err != nil {
-					messagedb := models.Message{
-						MessageID: uint(messageId),
-						Text:      text,
-					}
-					models.DB.Save(&messagedb)
+			message, isMessage := currentResult["message"]
+			callbackQuery, isCallbackQuery := currentResult["callback_query"]
 
-					user, err := models.FindUserByChatId(uint(chatId))
-
-					if err != nil {
-						user.Name = from["first_name"].(string)
-						user.ChatID = uint(from["id"].(float64))
-						models.DB.Create(&user)
-					}
-
-					ch <- models.TelegramUpdate{
-						User:    user,
-						Message: messagedb,
-					}
-				}
+			if isMessage {
+				handleMessage(message, ch)
+			}
+			if isCallbackQuery {
+				handleCallbackQuery(callbackQuery)
 			}
 
 		}
@@ -75,9 +61,67 @@ func getUpdatesChan(bot models.TelegramBot, ch chan models.TelegramUpdate) {
 	}
 }
 
-func handleUpdate(bot models.TelegramBot) {
-	ch := make(chan models.TelegramUpdate, bot.Buffer)
-	go getUpdatesChan(bot, ch)
+func handleCallbackQuery(callbackQuery interface{}) {
+	tag := callbackQuery.(map[string]interface{})["data"].(string)
+	from := callbackQuery.(map[string]interface{})["from"].(map[string]interface{})
+	chatId := from["id"].(float64)
+	models.CreateIfNotExist(tag, uint(chatId))
+}
+
+func handleMessage(message interface{}, ch chan models.TelegramUpdate) {
+	from := message.(map[string]interface{})["from"].(map[string]interface{})
+	text := message.(map[string]interface{})["text"].(string)
+	messageId := message.(map[string]interface{})["message_id"].(float64)
+	chatId := from["id"].(float64)
+
+	_, err := models.FindMessageById(uint(messageId))
+
+	if err != nil {
+		messagedb := models.Message{
+			MessageID: uint(messageId),
+			Text:      text,
+		}
+		models.DB.Save(&messagedb)
+
+		user, err := models.FindUserByChatId(uint(chatId))
+
+		if err != nil {
+			user.Name = from["first_name"].(string)
+			user.ChatID = uint(from["id"].(float64))
+			models.DB.Create(&user)
+		}
+
+		ch <- models.TelegramUpdate{
+			User:    user,
+			Message: messagedb,
+		}
+	}
+}
+
+func PreloadUpdatesToDatabase() {
+	url := getTelegramUrl(TelegramGetUpdatesMethod)
+	respMap, err := MakeGetJsonRequest(url, make(map[string]string))
+
+	if err != nil {
+		panic(fmt.Sprintf("Telegram API Error: %v", err.Error()))
+	}
+	results := respMap["result"].([]interface{})
+	for _, result := range results {
+		currentResult := result.(map[string]interface{})
+		updateId := currentResult["update_id"].(float64)
+
+		if updateIdExists := models.IsExistUpdateId(uint(updateId)); updateIdExists {
+			continue
+		}
+		//Save update_id to database
+		models.DB.Create(&models.Update{UpdateID: uint(updateId)})
+	}
+
+}
+
+func StartBotListener() {
+	ch := make(chan models.TelegramUpdate, BOT.Buffer)
+	go getUpdatesChan(ch)
 
 	for item := range ch {
 		fmt.Println(fmt.Sprintf("Handled new messagr from %v with text %v", item.User.ChatID, item.Message.Text))
@@ -92,12 +136,10 @@ func handleUpdate(bot models.TelegramBot) {
 					models.DB.Save(&user)
 
 					_ = SendTelegramPlainMessage(
-						bot,
 						fmt.Sprintf("Спасибо, %v! Авторизация прошла успешно, токен сохранен.", user.Name),
 						user.ChatID)
-					HandleUserIssues(bot, true)
+					HandleUserIssues(true)
 					_ = SendTelegramPlainMessage(
-						bot,
 						"Успешно актуализирована база данных ранее существующих тикетов.",
 						user.ChatID)
 					continue
@@ -105,7 +147,6 @@ func handleUpdate(bot models.TelegramBot) {
 			}
 
 			_ = SendTelegramPlainMessage(
-				bot,
 				fmt.Sprintf("Привет, %v! Пришли мне персональный токер авторизации Jira.", user.Name),
 				user.ChatID)
 		}
@@ -116,8 +157,8 @@ func handleUpdate(bot models.TelegramBot) {
 	}
 }
 
-func validTokenCheck(bot models.TelegramBot) error {
-	url := getTelegramUrl(bot, TelegramGetMeMethod)
+func validTokenCheck() error {
+	url := getTelegramUrl(TelegramGetMeMethod)
 
 	if _, err := MakeGetJsonRequest(url, make(map[string]string)); err != nil {
 		return err
@@ -126,8 +167,8 @@ func validTokenCheck(bot models.TelegramBot) error {
 	return nil
 }
 
-func SendTelegramPlainMessage(bot models.TelegramBot, message string, recipient uint) map[string]interface{} {
-	url := getTelegramUrl(bot, TelegramSendMessageMethod)
+func SendTelegramPlainMessage(message string, recipient uint) map[string]interface{} {
+	url := getTelegramUrl(TelegramSendMessageMethod)
 
 	body := map[string]interface{}{
 		"chat_id": recipient,
@@ -144,8 +185,8 @@ func SendTelegramPlainMessage(bot models.TelegramBot, message string, recipient 
 	return jsonMap
 }
 
-func SendTelegramCustomMessage(bot models.TelegramBot, body map[string]interface{}) map[string]interface{} {
-	url := getTelegramUrl(bot, TelegramSendMessageMethod)
+func SendTelegramCustomMessage(body map[string]interface{}) map[string]interface{} {
+	url := getTelegramUrl(TelegramSendMessageMethod)
 
 	jsonMap, err := MakePostJsonRequest(url, body, make(map[string]string))
 
@@ -157,6 +198,6 @@ func SendTelegramCustomMessage(bot models.TelegramBot, body map[string]interface
 	return jsonMap
 }
 
-func getTelegramUrl(bot models.TelegramBot, method string) string {
-	return fmt.Sprintf("%v%v/%v", TelegramApiHost, bot.Token, method)
+func getTelegramUrl(method string) string {
+	return fmt.Sprintf("%v%v/%v", TelegramApiHost, BOT.Token, method)
 }

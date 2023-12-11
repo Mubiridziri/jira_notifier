@@ -19,6 +19,9 @@ func ConnectDatabase() error {
 	err = database.AutoMigrate(&User{})
 	err = database.AutoMigrate(&Message{})
 	err = database.AutoMigrate(&Issue{})
+	err = database.AutoMigrate(&Update{})
+	err = database.AutoMigrate(&Favorite{})
+	err = database.AutoMigrate(&TrackedIssue{})
 
 	if err != nil {
 		return errors.New("failed auto migrate database")

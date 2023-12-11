@@ -23,7 +23,7 @@ func (issue *NewIssue) ConvertToDBIssue() Issue {
 	}
 }
 
-func FindTaskByTag(tag string) (*Issue, error) {
+func FindIssueByTag(tag string) (*Issue, error) {
 	var task *Issue
 	if err := DB.Where("tag = @tag", sql.Named("tag", tag)).First(&task).Error; err != nil {
 		return &Issue{}, err
