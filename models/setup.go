@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"jiraAwesomeBot/config"
+	"jira_notifier/config"
 )
 
 var DB *gorm.DB

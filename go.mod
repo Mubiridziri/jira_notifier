@@ -1,4 +1,4 @@
-module jiraAwesomeBot
+module jira_notifier
 
 go 1.21
 

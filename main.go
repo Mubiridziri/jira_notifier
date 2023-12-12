@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/TwiN/go-color"
-	"jiraAwesomeBot/config"
-	"jiraAwesomeBot/models"
-	"jiraAwesomeBot/services"
+	"jira_notifier/config"
+	"jira_notifier/models"
+	"jira_notifier/services"
 	"net/http"
 )
 

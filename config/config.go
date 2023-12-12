@@ -1,6 +1,6 @@
 package config
 
-import "jiraAwesomeBot/helpers"
+import "jira_notifier/helpers"
 
 const (
 	TelegramToken             = "TELEGRAM_TOKEN"

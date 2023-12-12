@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/TwiN/go-color"
-	"jiraAwesomeBot/config"
-	"jiraAwesomeBot/models"
+	"jira_notifier/config"
+	"jira_notifier/models"
 	"time"
 )
 

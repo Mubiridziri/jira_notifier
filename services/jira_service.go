@@ -2,8 +2,8 @@ package services
 
 import (
 	"fmt"
-	"jiraAwesomeBot/config"
-	"jiraAwesomeBot/models"
+	"jira_notifier/config"
+	"jira_notifier/models"
 	"time"
 )
 
