@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"github.com/TwiN/go-color"
 	"jiraAwesomeBot/config"
 	"jiraAwesomeBot/models"
 	"time"
@@ -31,7 +32,12 @@ func getUpdatesChan(ch chan models.TelegramUpdate) {
 		respMap, err := MakeGetJsonRequest(url, make(map[string]string))
 
 		if err != nil {
-			panic(fmt.Sprintf("Telegram API Error: %v", err.Error()))
+			//Wait time when read: connection reset by peer
+			message := fmt.Sprintf("Telegram API Error: %v", err.Error())
+			fmt.Println(color.Ize(color.Red, message))
+			time.Sleep(time.Duration(config.CFG.Telegram.UpdateIntervalSec) * time.Second)
+			continue
+
 		}
 
 		results := respMap["result"].([]interface{})
