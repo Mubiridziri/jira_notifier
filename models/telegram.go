@@ -1,8 +1,8 @@
 package models
 
 import (
-	"jiraAwesomeBot/config"
-	"jiraAwesomeBot/helpers"
+	"jira_notifier/config"
+	"jira_notifier/helpers"
 )
 
 type TelegramBot struct {
