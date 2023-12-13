@@ -23,6 +23,10 @@ func ConnectDatabase() error {
 	err = database.AutoMigrate(&Favorite{})
 	err = database.AutoMigrate(&TrackedIssue{})
 
+	//SQL
+	//TODO REMOVE AFTER RELEASE 0.3
+	database.Exec("DELETE FROM tracked_issues WHERE id IS NOT NULL")
+
 	if err != nil {
 		return errors.New("failed auto migrate database")
 	}

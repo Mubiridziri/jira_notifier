@@ -139,10 +139,10 @@ func handleTackedIssuesByUser(user models.User) {
 		title := fields["summary"].(string)
 		currentUpdatedDate := fields["updated"].(string)
 
-		tagDB, err := models.FindTrackedIssueByTag(tag)
+		tagDB, err := models.FindTrackedIssueByTag(tag, user.JiraUsername)
 
 		if err != nil {
-			tagDB = &models.TrackedIssue{Tag: tag, UpdatedAt: currentUpdatedDate}
+			tagDB = &models.TrackedIssue{Tag: tag, UpdatedAt: currentUpdatedDate, Username: user.JiraUsername}
 			models.DB.Create(tagDB)
 			continue
 		}
