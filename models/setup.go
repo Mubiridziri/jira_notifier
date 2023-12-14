@@ -2,6 +2,8 @@ package models
 
 import (
 	"errors"
+	"fmt"
+	"github.com/TwiN/go-color"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"jira_notifier/config"
@@ -10,6 +12,7 @@ import (
 var DB *gorm.DB
 
 func ConnectDatabase() error {
+	fmt.Println(color.Ize(color.Green, "Connect to local database..."))
 	database, err := gorm.Open(sqlite.Open(config.CFG.Database.Name), &gorm.Config{})
 
 	if err != nil {
@@ -20,12 +23,14 @@ func ConnectDatabase() error {
 	err = database.AutoMigrate(&Message{})
 	err = database.AutoMigrate(&Issue{})
 	err = database.AutoMigrate(&Update{})
-	err = database.AutoMigrate(&Favorite{})
 	err = database.AutoMigrate(&TrackedIssue{})
+	err = database.AutoMigrate(&AuthorizationCode{})
 
-	//SQL
-	//TODO REMOVE AFTER RELEASE 0.3
-	database.Exec("DELETE FROM tracked_issues WHERE id IS NOT NULL")
+	//TODO AFTER RELEASE 0.4
+	migrator := database.Migrator()
+	if migrator.HasTable("favorites") {
+		err = migrator.DropTable("favorites")
+	}
 
 	if err != nil {
 		return errors.New("failed auto migrate database")

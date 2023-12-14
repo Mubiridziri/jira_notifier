@@ -8,6 +8,7 @@ const (
 	DatabaseName              = "DATABASE_NAME"
 	JiraAddress               = "JIRA_ADDRESS"
 	JiraUpdateInterval        = "JIRA_UPDATE_INTERVAL_MIN"
+	AdminChatId               = "ADMIN_CHAT_ID"
 )
 
 type Config struct {
@@ -20,6 +21,7 @@ type Config struct {
 type TelegramConfig struct {
 	Token             string
 	UpdateIntervalSec int
+	AdminChatId       uint
 }
 
 type DatabaseConfig struct {
@@ -36,6 +38,7 @@ func New() *Config {
 		Telegram: TelegramConfig{
 			Token:             helpers.GetEnvStr(TelegramToken, ""),
 			UpdateIntervalSec: helpers.GetEnvInt(TelegramUpdateIntervalSec, 5),
+			AdminChatId:       helpers.GetEnvUint(AdminChatId, 0),
 		},
 		Database: DatabaseConfig{
 			Name: helpers.GetEnvStr(DatabaseName, ""),

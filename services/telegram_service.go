@@ -90,11 +90,19 @@ func handleMessage(message interface{}, ch chan models.TelegramUpdate) {
 		models.DB.Save(&messagedb)
 
 		user, err := models.FindUserByChatId(uint(chatId))
+		username := from["username"].(string)
 
 		if err != nil {
 			user.Name = from["first_name"].(string)
 			user.ChatID = uint(from["id"].(float64))
+			user.Username = username
 			models.DB.Create(&user)
+		}
+
+		//Update username when his changed
+		if user.Username != username {
+			user.Username = username
+			models.DB.Save(&user)
 		}
 
 		ch <- models.TelegramUpdate{
@@ -105,6 +113,7 @@ func handleMessage(message interface{}, ch chan models.TelegramUpdate) {
 }
 
 func PreloadUpdatesToDatabase() {
+	fmt.Println(color.Ize(color.Green, "Update database..."))
 	url := getTelegramUrl(TelegramGetUpdatesMethod)
 	respMap, err := MakeGetJsonRequest(url, make(map[string]string))
 
@@ -126,6 +135,7 @@ func PreloadUpdatesToDatabase() {
 }
 
 func StartBotListener() {
+	fmt.Println(color.Ize(color.Green, "Starting Telegram Listener..."))
 	ch := make(chan models.TelegramUpdate, BOT.Buffer)
 	go getUpdatesChan(ch)
 
@@ -156,7 +166,9 @@ func StartBotListener() {
 				fmt.Sprintf("Привет, %v! Пришли мне персональный токер авторизации Jira.", user.Name),
 				user.ChatID)
 		}
-		if message == "/super-exit" {
+
+		//Handle command only when user is admin
+		if message == "/super-exit" && user.Role == models.AdminRole {
 			config.CFG.Alive = false
 		}
 

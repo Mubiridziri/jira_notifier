@@ -5,41 +5,39 @@ import (
 	"github.com/TwiN/go-color"
 	"jira_notifier/config"
 	"jira_notifier/models"
+	"jira_notifier/routers"
 	"jira_notifier/services"
 	"net/http"
 )
 
 func main() {
 	fmt.Println(color.Ize(color.Green, "Starting..."))
-	fmt.Println(color.Ize(color.Green, "Load .env file..."))
+
+	server := http.Server{
+		Addr:    ":8080",
+		Handler: routers.InitRouter(),
+	}
+
 	if err := config.LoadConfig(); err != nil {
 		panic(err)
 	}
 
-	fmt.Println(color.Ize(color.Green, "Connect to local database..."))
 	if err := models.ConnectDatabase(); err != nil {
 		panic(err)
 	}
 
-	fmt.Println(color.Ize(color.Green, "Starting Telegram Bot Handler..."))
-	err := services.StartBot()
-	if err != nil {
+	if err := services.StartBot(); err != nil {
 		panic(err)
 	}
 
-	fmt.Println(color.Ize(color.Green, "Update database..."))
 	services.PreloadUpdatesToDatabase()
 	services.HandleUserIssues(true)
-	fmt.Println(color.Ize(color.Green, "Starting Jira Issue Listener..."))
 
 	//Start goroutines listener
 	go services.StartBotListener()
 	go services.StartJiraListener(false)
 
-	//TODO SECURE API ENDPOINT FOR GLOBAL TELEGRAM MESSAGE FOR ACTIVE USERS
-	//HTTP Server
-	err = http.ListenAndServe(":8080", nil)
-	if err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		panic(err)
 	}
 }

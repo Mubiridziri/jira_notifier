@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"github.com/TwiN/go-color"
 	"jira_notifier/config"
 	"jira_notifier/models"
 	"time"
@@ -20,6 +21,7 @@ var templates = map[string]string{
 }
 
 func StartJiraListener(silentMode bool) {
+	fmt.Println(color.Ize(color.Green, "Starting Jira Issue Listener..."))
 	for {
 		HandleUserIssues(silentMode)
 		time.Sleep(time.Duration(config.CFG.Jira.UpdateIntervalMin) * time.Minute)
