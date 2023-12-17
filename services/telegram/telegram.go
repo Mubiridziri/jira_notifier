@@ -53,7 +53,11 @@ func GetOnlyNewMessages(messages map[string]interface{}) []models.Message {
 		}
 
 		//Message
-		text := message["text"].(string)
+		text, ok := message["text"].(string)
+		if !ok {
+			text = "[No text]"
+		}
+
 		date := message["date"].(float64)
 
 		//User

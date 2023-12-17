@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"jira_notifier/models"
+	"jira_notifier/services/telegram"
 	"math/rand"
 	"net/http"
 )
@@ -39,11 +41,11 @@ func LoginAction(c *gin.Context) {
 
 	models.DB.Create(&code)
 
-	//telegram.SendTelegramPlainMessage(
-	//	fmt.Sprintf("Привет, %v! "+
-	//		"В целях вашей же безопастности никому не сообщайте содержимое этого письма. \n\n "+
-	//		"Ваш код %v", user.Name, code.Code),
-	//	user.ChatID)
+	telegram.SendTelegramPlainMessage(
+		fmt.Sprintf("Привет, %v! "+
+			"В целях вашей же безопастности никому не сообщайте содержимое этого письма. \n\n "+
+			"Ваш код %v", user.Name, code.Code),
+		user.ChatID)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"name":      user.Name,

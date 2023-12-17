@@ -14,6 +14,12 @@
  - [Parameters](https://github.com/Mubiridziri/jira_notifier/wiki/Parameters)
  - [Telegram Admin Commands](https://github.com/Mubiridziri/jira_notifier/wiki/Telegram-Commands)
 
+## Screenshots
+
+<img src="resources/Cover1.jpg" alt="drawing" width="200"/>
+<img src="resources/Cover2.jpg" alt="drawing" width="200"/>
+<img src="resources/Cover3.jpg" alt="drawing" width="200"/>
+
 ## P.S
 
 > Don't judge strictly, this is my first project in Golang after PHP/Symfony
