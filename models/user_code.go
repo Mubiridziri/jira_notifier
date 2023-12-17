@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type AuthorizationCode struct {
+type UserCode struct {
 	Code      int
 	ExpiredAt time.Time
 	UserID    uint `gorm:"not null"`
@@ -16,8 +16,8 @@ type LoginCode struct {
 	Code int `json:"code" binding:"required"`
 }
 
-func FindValidCode(code int) (AuthorizationCode, error) {
-	var authorizationCode AuthorizationCode
+func FindValidCode(code int) (UserCode, error) {
+	var authorizationCode UserCode
 	now := time.Now()
 	err := DB.
 		Where(
@@ -28,13 +28,13 @@ func FindValidCode(code int) (AuthorizationCode, error) {
 		Error
 
 	if err != nil {
-		return AuthorizationCode{}, err
+		return UserCode{}, err
 	}
 
 	return authorizationCode, nil
 }
 
-func (code *AuthorizationCode) BeforeCreate(tx *gorm.DB) error {
+func (code *UserCode) BeforeCreate(tx *gorm.DB) error {
 	code.ExpiredAt = time.Now().Add(time.Minute * 2) //add 2 minutes
 	return nil
 }

@@ -20,6 +20,9 @@ type User struct {
 	JiraAuthorized    bool
 	JiraUsername      string
 	Role              string
+	Messages          []Message      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Issues            []Issue        `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Notifications     []Notification `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type Login struct {
@@ -37,15 +40,15 @@ func FindUserByChatId(chatId uint) (User, error) {
 	return user, nil
 }
 
-func FindAllActiveUsers() ([]User, error) {
+func FindAllActiveUsers() []User {
 	var users []User
-	err := DB.Where(User{JiraAuthorized: true}).Find(&users).Error
+	err := DB.Where("jira_authorized = true").Find(&users).Error
 
 	if err != nil {
-		return make([]User, 0), err
+		panic(err)
 	}
 
-	return users, nil
+	return users
 }
 
 func FindUserByUsername(username string) (User, error) {

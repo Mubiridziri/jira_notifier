@@ -3,14 +3,12 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/TwiN/go-color"
 	"github.com/joho/godotenv"
 )
 
 var CFG *Config
 
 func LoadConfig() error {
-	fmt.Println(color.Ize(color.Green, "Load .env file..."))
 	var cfg *Config
 	if err := godotenv.Load(); err != nil {
 		return errors.New("no .env file found")
@@ -37,6 +35,9 @@ func validate(config *Config) error {
 	}
 	if config.Jira.JiraAddress == "" {
 		return createEnvNotNullError(JiraAddress)
+	}
+	if config.Jira.JiraPersonalTokenPageLink == "" {
+		return createEnvNotNullError(JiraPersonalTokenPageLink)
 	}
 	return nil
 }

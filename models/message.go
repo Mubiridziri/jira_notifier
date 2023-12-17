@@ -1,22 +1,25 @@
 package models
 
 import (
-	"database/sql"
-	"time"
+	"gorm.io/gorm"
 )
 
 type Message struct {
-	MessageID uint `gorm:"primary_key"`
-	Text      string
-	CreatedAt time.Time
+	ID     uint `gorm:"uniqueIndex"`
+	Text   string
+	Date   uint
+	UserID uint
+	User   User
 }
 
-func FindMessageById(id uint) (*Message, error) {
+func FindMessageById(updateId uint) (Message, error) {
 	var message Message
-	err := DB.Where("message_id = @message", sql.Named("message", id)).First(&message).Error
-	if err != nil {
-		return &Message{}, err
-	}
+	err := DB.Preload("User").Where(&Message{ID: updateId}).First(&message).Error
+	return message, err
+}
 
-	return &message, nil
+func (message *Message) BeforeCreate(tx *gorm.DB) error {
+	message.UserID = message.User.ID
+
+	return nil
 }

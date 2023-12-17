@@ -1,11 +1,9 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"jira_notifier/models"
-	"jira_notifier/services"
 	"math/rand"
 	"net/http"
 )
@@ -34,18 +32,18 @@ func LoginAction(c *gin.Context) {
 		return
 	}
 
-	code := models.AuthorizationCode{
+	code := models.UserCode{
 		Code:   rand.Intn(9999-1000) + 1000,
 		UserID: user.ID,
 	}
 
 	models.DB.Create(&code)
 
-	services.SendTelegramPlainMessage(
-		fmt.Sprintf("Привет, %v! "+
-			"В целях вашей же безопастности никому не сообщайте содержимое этого письма. \n\n "+
-			"Ваш код %v", user.Name, code.Code),
-		user.ChatID)
+	//telegram.SendTelegramPlainMessage(
+	//	fmt.Sprintf("Привет, %v! "+
+	//		"В целях вашей же безопастности никому не сообщайте содержимое этого письма. \n\n "+
+	//		"Ваш код %v", user.Name, code.Code),
+	//	user.ChatID)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"name":      user.Name,
