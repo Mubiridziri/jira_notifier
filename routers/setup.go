@@ -28,6 +28,12 @@ func InitRouter() *gin.Engine {
 		v1.GET("/profile", controllers.ProfileAction)
 		v1.POST("/logout", controllers.LogoutAction)
 
+		usersGroup := v1.Group("/users")
+		usersGroup.GET("", controllers.GetUsersList)
+		usersGroup.POST("/grant/:id", controllers.GrantAdminRole)
+		usersGroup.POST("/revoke/:id", controllers.RevokeAdminRole)
+		usersGroup.DELETE("/:id", controllers.RemoveUser)
+
 	}
 
 	return r

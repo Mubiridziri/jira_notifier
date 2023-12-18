@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"gorm.io/gorm"
 	"jira_notifier/config"
+	"jira_notifier/scopes"
 )
 
 const (
@@ -25,8 +26,50 @@ type User struct {
 	Notifications     []Notification `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
+type APIUser struct {
+	ID             uint
+	ChatID         uint
+	Username       string
+	Name           string
+	TelegramActive bool
+	JiraActive     bool
+	Role           string
+}
+
+func (user *User) ConvertAPIUser() APIUser {
+	return APIUser{
+		ID:             user.ID,
+		ChatID:         user.ChatID,
+		Username:       user.Username,
+		Name:           user.Name,
+		TelegramActive: len(user.Username) > 0,
+		JiraActive:     user.JiraAuthorized,
+		Role:           user.Role,
+	}
+}
+
+func ConvertUserToAPIUser(users []User) []APIUser {
+	var apiUsers []APIUser
+	for _, user := range users {
+		apiUsers = append(apiUsers, user.ConvertAPIUser())
+	}
+	return apiUsers
+}
+
 type Login struct {
 	Username string `json:"username" binding:"required"`
+}
+
+func FindPaginatedUsers(page, limit int) ([]User, error) {
+	var users []User
+	err := DB.Scopes(scopes.GetPaginationScope(page, limit)).Find(&users).Error
+	return users, err
+}
+
+func GetUsersTotal() (int64, error) {
+	var count int64
+	err := DB.Model(&User{}).Count(&count).Error
+	return count, err
 }
 
 func FindUserByChatId(chatId uint) (User, error) {
