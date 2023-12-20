@@ -28,7 +28,6 @@ type Label struct {
 func getCoverForNewIssue(issue models.Issue) string {
 	labels := getLabelsByIssue(issue)
 	return DrawImageByTemplate("resources/new_issue_cover.jpg", labels)
-
 }
 
 func getCoverForUpdatedIssue(issue models.Issue) string {
@@ -36,12 +35,18 @@ func getCoverForUpdatedIssue(issue models.Issue) string {
 	return DrawImageByTemplate("resources/updated_issue_cover.jpg", labels)
 }
 
+func getCoverForUpdatedCommentsIssue(issue models.Issue) string {
+	labels := getLabelsByIssue(issue)
+	return DrawImageByTemplate("resources/comments_updated_cover.jpg", labels)
+}
+
 func getLabelsByIssue(issue models.Issue) []Label {
 	return []Label{
 		{Text: issue.User.Name + "!", XPos: 290, YPos: 280, FontSize: 16},
 		{Text: fmt.Sprintf("%v %v", issue.Tag, issue.Title), XPos: 98, YPos: 380, FontSize: 14},
-		{Text: issue.Author, XPos: 247, YPos: 825, FontSize: 14},
-		{Text: issue.Priority, XPos: 334, YPos: 910, FontSize: 14},
+		{Text: issue.Priority, XPos: 334, YPos: 745, FontSize: 14},
+		{Text: issue.Status, XPos: 255, YPos: 825, FontSize: 14},
+		{Text: issue.Author, XPos: 240, YPos: 910, FontSize: 14},
 	}
 }
 
@@ -155,8 +160,9 @@ func WrapString(text string, length int) []string {
 
 func DrawLabel(dst *image.RGBA, face font.Face, x int, y int, str string) {
 	d := &font.Drawer{
-		Dst:  dst,
-		Src:  image.NewUniform(color.RGBA{24, 24, 24, 255}),
+		Dst: dst,
+		Src: image.NewUniform(color.RGBA{255, 255, 255, 255}),
+		//Src:  image.NewUniform(color.RGBA{24, 24, 24, 255}), //for default
 		Face: face,
 		Dot:  fixed.Point26_6{fixed.I(x), fixed.I(y)},
 	}

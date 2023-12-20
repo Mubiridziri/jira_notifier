@@ -13,6 +13,8 @@ type Issue struct {
 	UpdatedAt     string
 	Priority      string
 	Author        string
+	CommentCount  int
+	Status        string
 	UserID        uint
 	User          User
 	Notifications []Notification `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

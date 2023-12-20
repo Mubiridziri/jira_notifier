@@ -8,9 +8,18 @@ import (
 	"os"
 )
 
-func SendUpdatedIssueMessage(issue models.Issue, user models.User) {
+func SendSimpleUpdatedIssueMessage(issue models.Issue, user models.User) {
 	filepath := getCoverForUpdatedIssue(issue)
 
+	sendUpdatedIssueMessage(issue, user, filepath)
+}
+
+func SendCommentsUpdatedIssueMessage(issue models.Issue, user models.User) {
+	filepath := getCoverForUpdatedCommentsIssue(issue)
+	sendUpdatedIssueMessage(issue, user, filepath)
+}
+
+func sendUpdatedIssueMessage(issue models.Issue, user models.User, filepath string) {
 	buttons := map[string]interface{}{
 		"inline_keyboard": [][]interface{}{
 			{map[string]interface{}{"text": "🔗 Открыть задачу", "url": issue.GetLink()}},

@@ -1,7 +1,6 @@
 package jira
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"jira_notifier/config"
 	"jira_notifier/models"
@@ -9,8 +8,8 @@ import (
 )
 
 func LoadNewIssues(user models.User, silent bool) {
-	url := getJiraIssuesURL(user.JiraUsername)
-	response := LoadIssues(url, user)
+	url := getJiraIssuesURL()
+	response := LoadIssues(url, "assignee in ("+user.JiraUsername+")", user)
 
 	for _, item := range response {
 		tag := item.(map[string]interface{})["key"].(string)
@@ -22,13 +21,17 @@ func LoadNewIssues(user models.User, silent bool) {
 			title := fields["summary"].(string)
 			creator := fields["creator"].(map[string]interface{})["displayName"].(string)
 			priority := fields["priority"].(map[string]interface{})["name"].(string)
+			status := fields["status"].(map[string]interface{})["name"].(string)
+			commentsCount := fields["comment"].(map[string]interface{})["total"].(float64)
 			issue = models.Issue{
-				Tag:       tag,
-				UpdatedAt: updatedAt,
-				Title:     title,
-				User:      user,
-				Priority:  priority,
-				Author:    creator,
+				Tag:          tag,
+				UpdatedAt:    updatedAt,
+				Title:        title,
+				User:         user,
+				Priority:     priority,
+				Author:       creator,
+				Status:       status,
+				CommentCount: int(commentsCount),
 			}
 			models.DB.Create(&issue)
 			if !silent {
@@ -46,8 +49,8 @@ func LoadNewIssues(user models.User, silent bool) {
 }
 
 func LoadWatchedIssues(user models.User, silent bool) {
-	url := getJiraWatchedIssuesURL(user.JiraUsername)
-	response := LoadIssues(url, user)
+	url := getJiraIssuesURL()
+	response := LoadIssues(url, "watcher="+user.JiraUsername, user)
 
 	for _, item := range response {
 		tag := item.(map[string]interface{})["key"].(string)
@@ -55,43 +58,68 @@ func LoadWatchedIssues(user models.User, silent bool) {
 		updatedAt := fields["updated"].(string)
 		title := fields["summary"].(string)
 		priority := fields["priority"].(map[string]interface{})["name"].(string)
+		status := fields["status"].(map[string]interface{})["name"].(string)
+		commentsCount := fields["comment"].(map[string]interface{})["total"].(float64)
 
 		issue, err := models.FindIssueByTag(tag, user)
 		if err != nil {
 			creator := fields["creator"].(map[string]interface{})["displayName"].(string)
 			issue = models.Issue{
-				Tag:       tag,
-				UpdatedAt: updatedAt,
-				Title:     title,
-				User:      user,
-				Priority:  priority,
-				Author:    creator,
+				Tag:          tag,
+				UpdatedAt:    updatedAt,
+				Title:        title,
+				User:         user,
+				Priority:     priority,
+				Author:       creator,
+				Status:       status,
+				CommentCount: int(commentsCount),
 			}
 			models.DB.Create(&issue)
 		}
 
 		if updatedAt != issue.UpdatedAt {
 			issue.UpdatedAt = updatedAt
-			issue.Priority = priority
 			issue.Title = title
-			models.DB.Save(&issue)
 
 			if !silent {
 				notification := models.Notification{
-					Type:  models.UpdatedIssueType,
 					User:  user,
 					Issue: issue,
 				}
+
+				if int(commentsCount) != issue.CommentCount {
+					notification.Type = models.UpdatedCommentsIssueType
+				} else {
+					notification.Type = models.UpdatedIssueType
+				}
+
+				issue.Status = status
+				issue.Priority = priority
+				issue.CommentCount = int(commentsCount)
+
 				models.DB.Create(&notification)
 			}
+
+			models.DB.Save(&issue)
 		}
 
 	}
 }
 
-func LoadIssues(url string, user models.User) []interface{} {
+func LoadIssues(url string, jql string, user models.User) []interface{} {
 	headerBag := getHeaderBag(user.JiraPersonalToken)
-	issues, err := requests.MakeGetJsonRequest(url, headerBag)
+	issues, err := requests.MakePostJsonRequest(url, gin.H{
+		"jql":        jql,
+		"maxResults": 10000,
+		"fields": []string{
+			"comment",
+			"summary",
+			"updated",
+			"priority",
+			"status",
+			"creator",
+		},
+	}, headerBag)
 
 	if err != nil {
 		if gin.Mode() == gin.DebugMode {
@@ -104,16 +132,6 @@ func LoadIssues(url string, user models.User) []interface{} {
 
 }
 
-func getJiraIssuesURL(username string) string {
-	return fmt.Sprintf(
-		config.CFG.Jira.JiraAddress+"/rest/api/latest/search?jql=assignee%%20in%%20(%v)&maxResults=1000",
-		username,
-	)
-}
-
-func getJiraWatchedIssuesURL(username string) string {
-	return fmt.Sprintf(
-		config.CFG.Jira.JiraAddress+"/rest/api/latest/search?jql=watcher=%v&maxResults=1000",
-		username,
-	)
+func getJiraIssuesURL() string {
+	return config.CFG.Jira.JiraAddress + "/rest/api/latest/search"
 }

@@ -27,7 +27,9 @@ func HandleNotification() {
 		case models.NewIssueType:
 			telegram.SendAssigneeIssueMessage(notification.Issue, notification.User)
 		case models.UpdatedIssueType:
-			telegram.SendUpdatedIssueMessage(notification.Issue, notification.User)
+			telegram.SendSimpleUpdatedIssueMessage(notification.Issue, notification.User)
+		case models.UpdatedCommentsIssueType:
+			telegram.SendCommentsUpdatedIssueMessage(notification.Issue, notification.User)
 		}
 		notification.Notified = true
 		models.DB.Save(&notification)

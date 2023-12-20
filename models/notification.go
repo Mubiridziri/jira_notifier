@@ -7,11 +7,12 @@ import (
 )
 
 const (
-	NewIssueType       = "NewIssue"
-	UpdatedIssueType   = "UpdatedIssue"
-	TokenSuccessType   = "TokenSuccessType"
-	DataLoadedType     = "DataLoaded"
-	WelcomeMessageType = "WelcomeMessage"
+	NewIssueType             = "NewIssue"
+	UpdatedIssueType         = "UpdatedIssue"
+	UpdatedCommentsIssueType = "UpdatedCommentsIssue"
+	TokenSuccessType         = "TokenSuccessType"
+	DataLoadedType           = "DataLoaded"
+	WelcomeMessageType       = "WelcomeMessage"
 )
 
 type Notification struct {
@@ -32,7 +33,14 @@ func FindAllActiveNotifications() ([]Notification, error) {
 
 func (notification *Notification) BeforeCreate(tx *gorm.DB) error {
 	if helpers.InStringArray(
-		[]string{NewIssueType, UpdatedIssueType, TokenSuccessType, WelcomeMessageType, DataLoadedType},
+		[]string{
+			NewIssueType,
+			UpdatedIssueType,
+			UpdatedCommentsIssueType,
+			TokenSuccessType,
+			WelcomeMessageType,
+			DataLoadedType,
+		},
 		notification.Type) == -1 {
 		return errors.New("invalid notification type")
 	}

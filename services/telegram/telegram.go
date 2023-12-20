@@ -35,7 +35,11 @@ func GetUpdates() map[string]interface{} {
 func GetOnlyNewMessages(messages map[string]interface{}) []models.Message {
 	newMessages := make([]models.Message, 0)
 
-	updates := messages["result"].([]interface{})
+	updates, exists := messages["result"].([]interface{})
+
+	if !exists {
+		return newMessages
+	}
 
 	for _, update := range updates {
 		typedUpdate := update.(map[string]interface{})
