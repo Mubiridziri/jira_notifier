@@ -8,6 +8,8 @@ const (
 	DatabaseName              = "DATABASE_NAME"
 	JiraAddress               = "JIRA_ADDRESS"
 	JiraUpdateInterval        = "JIRA_UPDATE_INTERVAL_MIN"
+	JiraPersonalTokenPageLink = "JIRA_PERSONAL_TOKEN_PAGE_LINK"
+	AdminChatId               = "ADMIN_CHAT_ID"
 )
 
 type Config struct {
@@ -20,6 +22,7 @@ type Config struct {
 type TelegramConfig struct {
 	Token             string
 	UpdateIntervalSec int
+	AdminChatId       uint
 }
 
 type DatabaseConfig struct {
@@ -27,8 +30,9 @@ type DatabaseConfig struct {
 }
 
 type JiraConfig struct {
-	JiraAddress       string
-	UpdateIntervalMin int
+	JiraAddress               string
+	UpdateIntervalMin         int
+	JiraPersonalTokenPageLink string
 }
 
 func New() *Config {
@@ -36,13 +40,15 @@ func New() *Config {
 		Telegram: TelegramConfig{
 			Token:             helpers.GetEnvStr(TelegramToken, ""),
 			UpdateIntervalSec: helpers.GetEnvInt(TelegramUpdateIntervalSec, 5),
+			AdminChatId:       helpers.GetEnvUint(AdminChatId, 0),
 		},
 		Database: DatabaseConfig{
 			Name: helpers.GetEnvStr(DatabaseName, ""),
 		},
 		Jira: JiraConfig{
-			JiraAddress:       helpers.GetEnvStr(JiraAddress, ""),
-			UpdateIntervalMin: helpers.GetEnvInt(JiraUpdateInterval, 1),
+			JiraAddress:               helpers.GetEnvStr(JiraAddress, ""),
+			JiraPersonalTokenPageLink: helpers.GetEnvStr(JiraPersonalTokenPageLink, ""),
+			UpdateIntervalMin:         helpers.GetEnvInt(JiraUpdateInterval, 1),
 		},
 		Alive: true,
 	}

@@ -24,3 +24,15 @@ func GetEnvInt(key string, defaultValue int) int {
 
 	return defaultValue
 }
+
+func GetEnvUint(key string, defaultValue uint) uint {
+	if value, exists := os.LookupEnv(key); exists {
+		intValue, err := strconv.Atoi(value)
+		if err != nil {
+			panic(err)
+		}
+		return uint(intValue)
+	}
+
+	return defaultValue
+}

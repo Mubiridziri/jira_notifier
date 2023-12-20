@@ -16,16 +16,33 @@ func ConnectDatabase() error {
 		return errors.New("failed connect to database")
 	}
 
-	err = database.AutoMigrate(&User{})
-	err = database.AutoMigrate(&Message{})
-	err = database.AutoMigrate(&Issue{})
-	err = database.AutoMigrate(&Update{})
-	err = database.AutoMigrate(&Favorite{})
-	err = database.AutoMigrate(&TrackedIssue{})
+	//TODO REMOVE AFTER RELEASE 0.4
+	migrator := database.Migrator()
+	if migrator.HasTable("favorites") {
+		err = migrator.DropTable("favorites")
+	}
+	if migrator.HasTable("issues") {
+		err = migrator.DropTable("issues")
+	}
+	if migrator.HasTable("authorization_codes") {
+		err = migrator.DropTable("authorization_codes")
+	}
+	if migrator.HasTable("messages") {
+		err = migrator.DropTable("messages")
+	}
+	if migrator.HasTable("tracked_issues") {
+		err = migrator.DropTable("tracked_issues")
+	}
+	if migrator.HasTable("updates") {
+		err = migrator.DropTable("updates")
+	}
 
-	//SQL
-	//TODO REMOVE AFTER RELEASE 0.3
-	database.Exec("DELETE FROM tracked_issues WHERE id IS NOT NULL")
+	err = database.AutoMigrate(&User{})
+	err = database.AutoMigrate(&UserCode{})
+	err = database.AutoMigrate(&Issue{})
+	err = database.AutoMigrate(&Message{})
+	err = database.AutoMigrate(&Notification{})
+	err = database.AutoMigrate(&ChangeSet{})
 
 	if err != nil {
 		return errors.New("failed auto migrate database")

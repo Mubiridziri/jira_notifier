@@ -1,45 +1,51 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/TwiN/go-color"
+	"github.com/gin-gonic/gin"
 	"jira_notifier/config"
+	"jira_notifier/handlers"
+	"jira_notifier/listeners"
 	"jira_notifier/models"
-	"jira_notifier/services"
+	"jira_notifier/routers"
 	"net/http"
+	"strconv"
 )
 
 func main() {
 	fmt.Println(color.Ize(color.Green, "Starting..."))
-	fmt.Println(color.Ize(color.Green, "Load .env file..."))
+	mode := flag.Bool("release-mode", false, "Enable release mode")
+	port := flag.Int("port", 8080, "Port")
+	flag.Parse()
+
+	if *mode {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	server := http.Server{
+		Addr:    ":" + strconv.Itoa(*port),
+		Handler: routers.InitRouter(),
+	}
+
 	if err := config.LoadConfig(); err != nil {
 		panic(err)
 	}
 
-	fmt.Println(color.Ize(color.Green, "Connect to local database..."))
 	if err := models.ConnectDatabase(); err != nil {
 		panic(err)
 	}
 
-	fmt.Println(color.Ize(color.Green, "Starting Telegram Bot Handler..."))
-	err := services.StartBot()
-	if err != nil {
-		panic(err)
-	}
+	//Cache old data
+	handlers.HandleMessages(true)
+	handlers.HandleNewIssue(true)
+	handlers.HandleWatchedIssue(true)
 
-	fmt.Println(color.Ize(color.Green, "Update database..."))
-	services.PreloadUpdatesToDatabase()
-	services.HandleUserIssues(true)
-	fmt.Println(color.Ize(color.Green, "Starting Jira Issue Listener..."))
+	//Init handlers
+	listeners.StartListeners()
 
-	//Start goroutines listener
-	go services.StartBotListener()
-	go services.StartJiraListener(false)
-
-	//TODO SECURE API ENDPOINT FOR GLOBAL TELEGRAM MESSAGE FOR ACTIVE USERS
-	//HTTP Server
-	err = http.ListenAndServe(":8080", nil)
-	if err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		panic(err)
 	}
 }

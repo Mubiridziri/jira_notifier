@@ -27,11 +27,17 @@ func validate(config *Config) error {
 	if config.Telegram.Token == "" {
 		return createEnvNotNullError(TelegramToken)
 	}
+	if config.Telegram.AdminChatId == 0 {
+		return createEnvNotNullError(AdminChatId)
+	}
 	if config.Database.Name == "" {
 		return createEnvNotNullError(DatabaseName)
 	}
 	if config.Jira.JiraAddress == "" {
 		return createEnvNotNullError(JiraAddress)
+	}
+	if config.Jira.JiraPersonalTokenPageLink == "" {
+		return createEnvNotNullError(JiraPersonalTokenPageLink)
 	}
 	return nil
 }
