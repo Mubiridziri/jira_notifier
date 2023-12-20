@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"gorm.io/gorm"
 )
 
@@ -14,7 +15,8 @@ type Message struct {
 
 func FindMessageById(updateId uint) (Message, error) {
 	var message Message
-	err := DB.Preload("User").Where(&Message{ID: updateId}).First(&message).Error
+	//when use .First method I catch NotFoundRecord error, why?
+	err := DB.Preload("User").Where("id = @id", sql.Named("id", updateId)).Find(&message).Error
 	return message, err
 }
 

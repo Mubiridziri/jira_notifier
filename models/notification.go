@@ -16,18 +16,25 @@ const (
 )
 
 type Notification struct {
-	ID       uint
-	UserID   uint
-	User     User
-	Notified bool
-	Type     string
-	IssueID  uint
-	Issue    Issue
+	ID         uint
+	UserID     uint
+	User       User
+	Notified   bool
+	Type       string
+	IssueID    uint
+	Issue      Issue
+	ChangeSets []ChangeSet `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func FindAllActiveNotifications() ([]Notification, error) {
 	var notifications []Notification
-	err := DB.Preload("User").Preload("Issue").Preload("Issue.User").Where("notified = false").Find(&notifications).Error
+	err := DB.
+		Preload("User").
+		Preload("ChangeSets").
+		Preload("Issue").
+		Preload("Issue.User").
+		Where("notified = false").
+		Find(&notifications).Error
 	return notifications, err
 }
 

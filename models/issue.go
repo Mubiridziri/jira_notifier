@@ -18,6 +18,7 @@ type Issue struct {
 	UserID        uint
 	User          User
 	Notifications []Notification `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ChangeSets    []ChangeSet    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func FindIssueByTag(tag string, user User) (Issue, error) {

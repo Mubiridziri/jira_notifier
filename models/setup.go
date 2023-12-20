@@ -42,6 +42,7 @@ func ConnectDatabase() error {
 	err = database.AutoMigrate(&Issue{})
 	err = database.AutoMigrate(&Message{})
 	err = database.AutoMigrate(&Notification{})
+	err = database.AutoMigrate(&ChangeSet{})
 
 	if err != nil {
 		return errors.New("failed auto migrate database")

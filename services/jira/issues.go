@@ -87,18 +87,33 @@ func LoadWatchedIssues(user models.User, silent bool) {
 					Issue: issue,
 				}
 
-				if int(commentsCount) != issue.CommentCount {
+				if int(commentsCount) > issue.CommentCount {
 					notification.Type = models.UpdatedCommentsIssueType
 				} else {
 					notification.Type = models.UpdatedIssueType
 				}
 
-				issue.Status = status
-				issue.Priority = priority
-				issue.CommentCount = int(commentsCount)
-
 				models.DB.Create(&notification)
+
+				var changeSets []models.ChangeSet
+
+				if status != issue.Status {
+					changeSet := models.NewChangeSet(issue, "status", issue.Status, status, notification)
+					changeSets = append(changeSets, changeSet)
+				}
+				if priority != issue.Priority {
+					changeSet := models.NewChangeSet(issue, "priority", issue.Priority, priority, notification)
+					changeSets = append(changeSets, changeSet)
+				}
+
+				if len(changeSets) > 0 {
+					models.DB.Create(&changeSets)
+				}
 			}
+
+			issue.Status = status
+			issue.Priority = priority
+			issue.CommentCount = int(commentsCount)
 
 			models.DB.Save(&issue)
 		}

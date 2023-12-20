@@ -8,10 +8,10 @@ import (
 	"os"
 )
 
-func SendSimpleUpdatedIssueMessage(issue models.Issue, user models.User) {
-	filepath := getCoverForUpdatedIssue(issue)
+func SendSimpleUpdatedIssueMessage(notification models.Notification) {
+	filepath := getCoverForUpdatedIssue(notification.Issue, notification.ChangeSets)
 
-	sendUpdatedIssueMessage(issue, user, filepath)
+	sendUpdatedIssueMessage(notification.Issue, notification.User, filepath)
 }
 
 func SendCommentsUpdatedIssueMessage(issue models.Issue, user models.User) {

@@ -30,8 +30,8 @@ func getCoverForNewIssue(issue models.Issue) string {
 	return DrawImageByTemplate("resources/new_issue_cover.jpg", labels)
 }
 
-func getCoverForUpdatedIssue(issue models.Issue) string {
-	labels := getLabelsByIssue(issue)
+func getCoverForUpdatedIssue(issue models.Issue, changeSets []models.ChangeSet) string {
+	labels := getLabelsByChangeSet(issue, changeSets)
 	return DrawImageByTemplate("resources/updated_issue_cover.jpg", labels)
 }
 
@@ -48,6 +48,51 @@ func getLabelsByIssue(issue models.Issue) []Label {
 		{Text: issue.Status, XPos: 255, YPos: 825, FontSize: 14},
 		{Text: issue.Author, XPos: 240, YPos: 910, FontSize: 14},
 	}
+}
+
+func getLabelsByChangeSet(issue models.Issue, changeSets []models.ChangeSet) []Label {
+	var labels = []Label{
+		{Text: issue.User.Name + "!", XPos: 290, YPos: 280, FontSize: 16},
+		{Text: fmt.Sprintf("%v %v", issue.Tag, issue.Title), XPos: 98, YPos: 380, FontSize: 14},
+		{Text: issue.Author, XPos: 240, YPos: 910, FontSize: 14},
+	}
+
+	if statusChangeSet := findChangeSetByField("status", changeSets); statusChangeSet != nil {
+		labels = append(
+			labels,
+			Label{
+				Text:     fmt.Sprintf("%v ‣ %v", statusChangeSet.OldValue, statusChangeSet.NewValue),
+				XPos:     255,
+				YPos:     825,
+				FontSize: 14},
+		)
+	} else {
+		labels = append(labels, Label{Text: issue.Status, XPos: 255, YPos: 825, FontSize: 14})
+	}
+
+	if priorityChangeSet := findChangeSetByField("priority", changeSets); priorityChangeSet != nil {
+		labels = append(
+			labels,
+			Label{
+				Text:     fmt.Sprintf("%v -> %v", priorityChangeSet.OldValue, priorityChangeSet.NewValue),
+				XPos:     334,
+				YPos:     745,
+				FontSize: 14},
+		)
+	} else {
+		labels = append(labels, Label{Text: issue.Priority, XPos: 334, YPos: 745, FontSize: 14})
+	}
+
+	return labels
+}
+
+func findChangeSetByField(field string, changeSets []models.ChangeSet) *models.ChangeSet {
+	for _, changeSet := range changeSets {
+		if changeSet.Field == field {
+			return &changeSet
+		}
+	}
+	return nil
 }
 
 func DrawImageByTemplate(templatePath string, labels []Label) string {
