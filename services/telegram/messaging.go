@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"jira_notifier/config"
 	"jira_notifier/models"
+	"log"
 	"os"
 )
 
@@ -32,12 +33,16 @@ func sendUpdatedIssueMessage(issue models.Issue, user models.User, filepath stri
 		panic(err)
 	}
 
-	SendTelegramCustomMessageWithImage(map[string]string{
+	err = SendTelegramCustomMessageWithImage(map[string]string{
 		"chat_id":      fmt.Sprintf("%v", user.ChatID),
 		"caption":      fmt.Sprintf("🔄 *Обновлено*  %v %v\n\n", issue.Tag, issue.Title),
 		"parse_mode":   "markdown",
 		"reply_markup": string(replyMarkup),
 	}, filepath)
+
+	if err != nil {
+		log.Printf("error when send notification for %v issue\n", issue.Tag)
+	}
 
 	os.Remove(filepath)
 }
@@ -58,7 +63,7 @@ func SendAssigneeIssueMessage(issue models.Issue, user models.User) {
 		panic(err)
 	}
 
-	SendTelegramCustomMessageWithImage(map[string]string{
+	err = SendTelegramCustomMessageWithImage(map[string]string{
 		"chat_id": fmt.Sprintf("%v", user.ChatID),
 		"caption": fmt.Sprintf(""+
 			"🆕 *Назначено*  %v %v\n\n"+
@@ -67,6 +72,10 @@ func SendAssigneeIssueMessage(issue models.Issue, user models.User) {
 		"parse_mode":   "markdown",
 		"reply_markup": string(replyMarkup),
 	}, filepath)
+
+	if err != nil {
+		log.Printf("error when send notification for %v issue\n", issue.Tag)
+	}
 
 	os.Remove(filepath)
 }
