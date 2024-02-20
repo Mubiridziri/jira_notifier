@@ -125,17 +125,13 @@ func SendTelegramCustomMessage(body map[string]interface{}) map[string]interface
 	return jsonMap
 }
 
-func SendTelegramCustomMessageWithImage(form map[string]string, filepath string) {
+func SendTelegramCustomMessageWithImage(form map[string]string, filepath string) error {
 	url := getTelegramUrl("sendPhoto")
 	err := requests.MakeFormData(url, form, "photo", map[string]string{
 		"file1": filepath,
 	})
 
-	if err != nil {
-		panic(err)
-	}
-
-	return
+	return err
 }
 
 func getTelegramUrl(method string) string {
